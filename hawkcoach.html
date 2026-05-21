@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HawkCoach Pro</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#020617;font-family:'Segoe UI',sans-serif;margin:0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#1e293b}
+::-webkit-scrollbar-thumb{background:#4f46e5;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const SUPABASE_URL="https://gvmmmakcvwywvrvzguye.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2bW1tYWtjdnd5d3ZydnpndXllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDU1OTcsImV4cCI6MjA5NDg4MTU5N30.LLohhXYvwOGS7yTrFncIj51Vq8bGYt2eLBSNfkBcH5o";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const COACH={user:"hawkcoach",pass:"hawk2025"};
+const {useState,useEffect,useMemo}=React;
+
+const PROGRAMS={
+  "ppl-5":{name:"Push-Pull-Leg (x5)",days:[
+    {id:"push-a",label:"Push A",ex:[{n:"Bench Press",s:"4x5+1x10"},{n:"Shoulder Press",s:"3x8-12"},{n:"Incline DB Press",s:"3x8-12"},{n:"Triceps OHP",s:"3x8-12"},{n:"Lateral Raise",s:"4x12-15"},{n:"Triceps Pushdown",s:"3x8-12"}]},
+    {id:"pull-a",label:"Pull A",ex:[{n:"Chest Supported Row",s:"5x6-8"},{n:"Lat Pulldown",s:"3x8-12"},{n:"Cable Row",s:"3x8-12"},{n:"Face Pull",s:"5x15-20"},{n:"Incline Curl",s:"4x8-10"},{n:"Hammer Curl",s:"4x8-10"}]},
+    {id:"leg-a",label:"Leg Day",ex:[{n:"Hack Squat/Leg Press",s:"5x6-8"},{n:"Leg Extension",s:"3x8-12"},{n:"Leg Curl",s:"3x8-12"},{n:"Calf Raise",s:"5x12-15"}]},
+    {id:"rest-1",label:"Rest Day",ex:[]},
+    {id:"push-b",label:"Push B",ex:[{n:"Shoulder Press",s:"4x5+1x10"},{n:"Bench Press",s:"3x8-12"},{n:"Incline Chest Press",s:"3x8-12"},{n:"Chest Fly",s:"3x12-15"},{n:"Lateral Raise",s:"4x12-15"},{n:"Skull Crusher",s:"3x8-12"}]},
+    {id:"pull-b",label:"Pull B",ex:[{n:"Lat Pulldown",s:"5x6-8"},{n:"Cable Row",s:"3x8-12"},{n:"Back Extension",s:"3x8-12"},{n:"Face Pull",s:"5x12-15"},{n:"Preacher Curl",s:"3x8-10"},{n:"Reverse Curl",s:"3x8-10"}]},
+    {id:"rest-2",label:"Rest Day",ex:[]}
+  ]},
+  "ul-4":{name:"Upper-Lower (x4)",days:[
+    {id:"ua",label:"Upper A",ex:[{n:"Incline Press",s:"3x6-8"},{n:"Seated Cable Fly",s:"3x8-12"},{n:"Chest Supported Row",s:"2x6-8"},{n:"Lat Pulldown",s:"3x8-12"},{n:"Lateral Raise",s:"4x8-12"},{n:"Preacher Curl",s:"3x8-10"},{n:"OHP Triceps",s:"3x8-10"}]},
+    {id:"la",label:"Lower A",ex:[{n:"Leg Extension",s:"3x8-10"},{n:"Leg Curl",s:"3x8-10"},{n:"Hack Squat/Leg Press",s:"3x8-10"},{n:"Calf Raise",s:"5x12-15"}]},
+    {id:"ub",label:"Upper B",ex:[{n:"Machine Chest",s:"3x6-8"},{n:"Shoulder Press",s:"3x8-12"},{n:"Chest Supported Row",s:"2x6-8"},{n:"Lat Pulldown",s:"3x8-12"},{n:"Lateral Raise",s:"4x8-12"},{n:"Incline Curl",s:"3x8-10"},{n:"Skull Crusher",s:"3x8-10"}]},
+    {id:"lb",label:"Lower B",ex:[{n:"Leg Extension",s:"3x12-15"},{n:"Leg Curl",s:"3x12-15"},{n:"Hack Squat/Leg Press",s:"3x10-12"},{n:"Calf Raise",s:"5x12-15"}]}
+  ]},
+  "ppl-lv":{name:"PPL Low Volume (x5)",days:[
+    {id:"plva",label:"Push A",ex:[{n:"Incline Bench Press",s:"2x6-8"},{n:"Chest Press Machine",s:"2x8-10"},{n:"Chest Fly",s:"2x8-12"},{n:"Lateral Raise",s:"4x8-12"},{n:"Rear Delt Fly",s:"4x10-12"},{n:"Triceps OHP",s:"2x8-12"},{n:"Triceps Pushdown",s:"2x10-12"}]},
+    {id:"plvb",label:"Pull A",ex:[{n:"Lat Pulldown",s:"2x8-10"},{n:"Supported Row",s:"2x8-10"},{n:"Cable Row",s:"2x8-10"},{n:"Preacher Curl",s:"3x8-10"},{n:"Reverse Curl",s:"3x8-10"}]},
+    {id:"plvc",label:"Leg Day",ex:[{n:"Leg Extension",s:"3x8-10"},{n:"Leg Curl",s:"3x8-10"},{n:"Hack Squat/Leg Press",s:"3x8-10"},{n:"Calf Raise",s:"5x12-15"}]},
+    {id:"plvr",label:"Rest Day",ex:[]},
+    {id:"plvd",label:"Push B",ex:[{n:"Shoulder Press",s:"2x6-8"},{n:"Lateral Raise",s:"4x8-12"},{n:"Rear Delt Fly",s:"4x10-12"},{n:"Incline Bench Press",s:"3x10"},{n:"Chest Fly",s:"3x10-12"},{n:"Triceps OHP",s:"2x8-12"},{n:"Triceps Pushdown",s:"2x10-12"}]},
+    {id:"plve",label:"Pull B",ex:[{n:"Lat Pulldown",s:"3x10-12"},{n:"Supported Row",s:"3x10-12"},{n:"Back Extension",s:"2x8-10"},{n:"Incline Curl",s:"3x8-10"},{n:"Hammer Curl",s:"3x8-10"}]},
+    {id:"plvr2",label:"Rest Day",ex:[]}
+  ]},
+  "ub-4":{name:"Ust Vucut x4",days:[
+    {id:"uba",label:"Push A",ex:[{n:"Bench Press",s:"4x5+1x10"},{n:"Shoulder Press",s:"3x8-12"},{n:"Incline DB Press",s:"3x8-12"},{n:"Triceps OHP",s:"3x8-12"},{n:"Lateral Raise",s:"4x12-15"},{n:"Triceps Pushdown",s:"3x8-12"}]},
+    {id:"ubb",label:"Pull A",ex:[{n:"Chest Supported Row",s:"5x6-8"},{n:"Lat Pulldown",s:"3x8-12"},{n:"Cable Row",s:"3x8-12"},{n:"Face Pull",s:"5x15-20"},{n:"Incline Curl",s:"4x8-10"},{n:"Hammer Curl",s:"4x8-10"}]},
+    {id:"ubc",label:"Push B",ex:[{n:"Shoulder Press",s:"4x5+1x10"},{n:"Bench Press",s:"3x8-12"},{n:"Incline Chest Press",s:"3x8-12"},{n:"Chest Fly",s:"3x12-15"},{n:"Lateral Raise",s:"4x12-15"},{n:"Skull Crusher",s:"3x8-12"}]},
+    {id:"ubd",label:"Pull B",ex:[{n:"Lat Pulldown",s:"5x6-8"},{n:"Cable Row",s:"3x8-12"},{n:"Back Extension",s:"3x8-12"},{n:"Face Pull",s:"5x12-15"},{n:"Preacher Curl",s:"3x8-10"},{n:"Reverse Curl",s:"3x8-10"}]}
+  ]},
+  "ul-arm-5":{name:"Upper-Lower-Arm (x5)",days:[
+    {id:"uaa",label:"Upper A",ex:[{n:"Incline Bench Press",s:"2x6-8"},{n:"Machine Bench Press",s:"2x6-8"},{n:"Chest Supported Row",s:"2x6-8"},{n:"Lat Pulldown",s:"2x6-8"},{n:"Shoulder Press",s:"2x6-8"},{n:"Lateral Raise",s:"3x8-12"},{n:"Preacher Curl",s:"1x8-10"},{n:"Triceps Pushdown",s:"1x8-10"}]},
+    {id:"uab",label:"Lower A",ex:[{n:"Hack Squat/Leg Press",s:"3x8-10"},{n:"Leg Extension",s:"3x8-10"},{n:"Leg Curl",s:"3x8-10"},{n:"Calf Raise",s:"3x12-15"}]},
+    {id:"uar",label:"Rest Day",ex:[]},
+    {id:"uac",label:"Upper B",ex:[{n:"Incline Bench Press",s:"2x10-12"},{n:"Machine Chest Fly",s:"2x10-12"},{n:"Chest Supported Row",s:"2x10-12"},{n:"Lat Pulldown",s:"2x10-12"},{n:"Shoulder Press",s:"2x10-12"},{n:"Lateral Raise",s:"3x12-15"},{n:"Preacher Curl",s:"1x10-12"},{n:"Triceps Pushdown",s:"1x10-12"}]},
+    {id:"uad",label:"Lower B",ex:[{n:"Leg Extension",s:"2x12-15"},{n:"Leg Curl",s:"2x12-15"},{n:"Leg Press",s:"2x12-15"},{n:"Calf Raise",s:"5x15-20"}]},
+    {id:"uae",label:"Arm Day",ex:[{n:"Lateral Raise",s:"4x8-12"},{n:"Rear Delt",s:"4x10-12"},{n:"Incline Curl",s:"3x8-10"},{n:"Triceps OHP",s:"3x8-10"},{n:"Hammer Curl",s:"3x8-10"},{n:"Skull Crusher",s:"3x8-10"},{n:"Reverse Curl",s:"2x8-10"},{n:"Triceps Pushdown",s:"2x8-10"}]},
+    {id:"uar2",label:"Rest Day",ex:[]}
+  ]}
+};
+
+const MKEYS=["bel","omuz","kol","gogus","kalca","bacak","boyun"];
+const MLBL={bel:"Bel",omuz:"Omuz",kol:"Kol",gogus:"Gogus",kalca:"Kalca",bacak:"Bacak",boyun:"Boyun"};
+
+const FOOD_DB={
+  protein:[
+    {n:"Tavuk Gogsu",cal:120,p:22.5,c:0,f:2.6},{n:"Tavuk But",cal:119,p:19.7,c:0,f:4.0},
+    {n:"Hindi Gogsu",cal:104,p:24.1,c:0,f:1.0},{n:"Dana Bonfile",cal:136,p:21.4,c:0,f:5.0},
+    {n:"Dana Kiyma %10",cal:176,p:20.0,c:0,f:10.0},{n:"Somon",cal:208,p:20.0,c:0,f:13.0},
+    {n:"Ton Baligi",cal:116,p:26.0,c:0,f:1.0},{n:"Levrek",cal:97,p:18.5,c:0,f:2.0},
+    {n:"Yumurta (Butun)",cal:143,p:12.6,c:0.8,f:9.6,pc:{g:55,l:"adet"}},
+    {n:"Yumurta Beyazi",cal:52,p:11.0,c:0.7,f:0.2,pc:{g:33,l:"adet"}},
+    {n:"Lor Peyniri",cal:85,p:17.0,c:2.0,f:1.5},{n:"Suzme Yogurt",cal:80,p:9.0,c:4.0,f:2.0},
+    {n:"Kasar Peyniri",cal:350,p:27.0,c:2.0,f:26.0},{n:"Beyaz Peynir",cal:265,p:16.0,c:2.0,f:22.0},
+    {n:"Karides",cal:71,p:13.6,c:0.9,f:1.0},{n:"Hamsi",cal:131,p:20.0,c:0,f:5.5}
+  ],
+  carb:[
+    {n:"Basmati Pirinc",cal:355,p:8.5,c:77,f:0.5},{n:"Yulaf Ezmesi",cal:356,p:12.6,c:60.7,f:7.0},
+    {n:"Bulgur",cal:342,p:12.5,c:65,f:1.5},{n:"Kinoa",cal:368,p:14.1,c:64,f:6.0},
+    {n:"Makarna",cal:357,p:12.0,c:73,f:1.5},{n:"Tam Bugday Makarna",cal:348,p:14.0,c:66,f:2.5},
+    {n:"Patates",cal:77,p:2.0,c:17,f:0.1,pc:{g:150,l:"orta boy"}},
+    {n:"Tatli Patates",cal:86,p:1.6,c:20,f:0.1,pc:{g:130,l:"orta boy"}},
+    {n:"Cream of Rice",cal:355,p:7.0,c:79,f:0.5},{n:"Esmer Pirinc",cal:362,p:7.5,c:76.2,f:2.7},
+    {n:"Muz",cal:89,p:1.1,c:23,f:0.3,pc:{g:120,l:"orta boy"}},
+    {n:"Ekmek",cal:247,p:9.0,c:45,f:3.5,pc:{g:35,l:"dilim"}},
+    {n:"Hurma",cal:282,p:2.5,c:75,f:0.4,pc:{g:8,l:"adet"}},
+    {n:"Maltodekstrin",cal:380,p:0,c:95,f:0},{n:"Nohut",cal:364,p:19,c:61,f:6.0}
+  ],
+  fat:[
+    {n:"Fistak Ezmesi",cal:588,p:25,c:20,f:50},{n:"Findik Ezmesi",cal:630,p:15,c:17,f:60},
+    {n:"Badem Ezmesi",cal:615,p:21,c:19,f:54},{n:"Tahin",cal:595,p:18,c:21,f:54},
+    {n:"Zeytinyagi",cal:884,p:0,c:0,f:100},{n:"Tereyagi",cal:717,p:0.8,c:0.1,f:81},
+    {n:"Chia Tohumu",cal:486,p:16.5,c:42.1,f:30.7},{n:"Keten Tohumu",cal:534,p:18.3,c:28.9,f:42.2},
+    {n:"Avokado",cal:160,p:2,c:9,f:15,pc:{g:150,l:"orta boy"}},
+    {n:"Ceviz",cal:654,p:15.2,c:14,f:65.2,pc:{g:4,l:"yari"}},
+    {n:"Badem",cal:579,p:21.2,c:22,f:49.9,pc:{g:1.2,l:"adet"}},
+    {n:"Antep Fistig",cal:562,p:20.2,c:28,f:45.4,pc:{g:0.7,l:"adet"}},
+    {n:"Kabak Cekirdegi",cal:559,p:30.2,c:10.7,f:49},{n:"Susam",cal:573,p:17.7,c:23.4,f:49.7},
+    {n:"Hindistan Cevizi Yagi",cal:884,p:0,c:0,f:100}
+  ],
+  vegetable:[
+    {n:"Ispanak",cal:23,p:2.9,c:3.6,f:0.4},{n:"Brokoli",cal:34,p:2.8,c:7.0,f:0.4},
+    {n:"Kabak",cal:17,p:1.2,c:3.1,f:0.3},{n:"Domates",cal:18,p:0.9,c:3.9,f:0.2,pc:{g:120,l:"orta boy"}},
+    {n:"Salatalik",cal:16,p:0.7,c:3.6,f:0.1,pc:{g:200,l:"adet"}},
+    {n:"Biber",cal:31,p:1.0,c:7.0,f:0.3,pc:{g:130,l:"adet"}},
+    {n:"Patlican",cal:25,p:1.0,c:5.9,f:0.2},{n:"Havuc",cal:41,p:0.9,c:9.6,f:0.2,pc:{g:80,l:"orta boy"}},
+    {n:"Mantar",cal:22,p:3.1,c:3.3,f:0.3},{n:"Marul",cal:15,p:1.4,c:2.9,f:0.2},
+    {n:"Taze Fasulye",cal:31,p:1.8,c:7.0,f:0.1},{n:"Roka",cal:25,p:2.6,c:3.7,f:0.7},
+    {n:"Sogan",cal:40,p:1.1,c:9.3,f:0.1,pc:{g:80,l:"orta boy"}},
+    {n:"Sarimsak",cal:149,p:6.4,c:33.1,f:0.5,pc:{g:4,l:"dis"}}
+  ],
+  fruit:[
+    {n:"Muz",cal:89,p:1.1,c:23,f:0.3,pc:{g:120,l:"orta boy"}},
+    {n:"Elma",cal:52,p:0.3,c:14,f:0.2,pc:{g:180,l:"orta boy"}},
+    {n:"Portakal",cal:47,p:0.9,c:12,f:0.1,pc:{g:200,l:"orta boy"}},
+    {n:"Cilek",cal:32,p:0.7,c:7.7,f:0.3,pc:{g:12,l:"adet"}},
+    {n:"Kivi",cal:61,p:1.1,c:15,f:0.5,pc:{g:75,l:"adet"}},
+    {n:"Seftali",cal:39,p:0.9,c:9.5,f:0.3,pc:{g:150,l:"orta boy"}},
+    {n:"Kayisi",cal:48,p:1.4,c:11,f:0.4,pc:{g:35,l:"adet"}},
+    {n:"Kiraz",cal:63,p:1.1,c:16,f:0.2,pc:{g:8,l:"adet"}},
+    {n:"Hurma",cal:282,p:2.5,c:75,f:0.4,pc:{g:8,l:"adet"}},
+    {n:"Karpuz",cal:30,p:0.6,c:7.6,f:0.2},{n:"Nar",cal:83,p:1.7,c:18.7,f:1.2}
+  ],
+  legume:[
+    {n:"Kirmizi Mercimek",cal:322,p:25,c:42,f:1.6},{n:"Yesil Mercimek",cal:334,p:24.5,c:45,f:1.0},
+    {n:"Nohut",cal:364,p:19,c:61,f:6.0},{n:"Kuru Fasulye",cal:337,p:22,c:58,f:1.5},
+    {n:"Barbunya",cal:347,p:21.4,c:60,f:1.2},{n:"Soya Fasulyesi",cal:446,p:36.5,c:30.2,f:20},
+    {n:"Borulce",cal:336,p:23.5,c:60,f:1.3},{n:"Edamame",cal:121,p:11.9,c:8.9,f:5.2},
+    {n:"Tofu",cal:76,p:8.1,c:1.9,f:4.8}
+  ]
+};
+
+const CAT_E={protein:"🥩",carb:"🌾",fat:"🫒",vegetable:"🥦",fruit:"🍎",legume:"🫘"};
+const CAT_L={protein:"Protein",carb:"Karb",fat:"Yag",vegetable:"Sebze",fruit:"Meyve",legume:"Bakliyat"};
+
+function genId(){return Math.random().toString(36).slice(2,9);}
+function genPass(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join("");}
+function fmtDate(d){return d?d.slice(5).replace("-","/"):"";}
+function daysSince(d){const diff=Math.floor((new Date()-new Date(d))/86400000);return diff===0?"Bugun":diff===1?"Dun":diff+"g once";}
+
+// Supabase functions
+async function dbStudents(){const{data}=await sb.from("students").select("*").order("created_at");return data||[];}
+async function dbSaveStudent(s){
+  const row={name:s.name,goal:s.goal||"Kas kazanimi",calories:parseInt(s.calories)||2000,protein:parseInt(s.protein)||150,carbs:parseInt(s.carbs)||200,fat:parseInt(s.fat)||65,water:parseFloat(s.water)||3,weight:parseFloat(s.weight)||0,height:parseFloat(s.height)||0,age:parseInt(s.age)||0,neck:parseFloat(s.neck)||0,waist:parseFloat(s.waist)||0,program:s.program||"ppl-5",password:s.password||"",notes:s.notes||"",student_note:s.student_note||"",flags:s.flags||[],custom_program:s.custom_program||{},last_seen:new Date().toISOString().slice(0,10),attendance:s.attendance||[]};
+  if(s.id){const{data}=await sb.from("students").update(row).eq("id",s.id).select().single();return data;}
+  else{const{data}=await sb.from("students").insert(row).select().single();return data;}
+}
+async function dbDeleteStudent(id){await sb.from("students").delete().eq("id",id);}
+async function dbMeasurements(sid){const{data}=await sb.from("measurements").select("*").eq("student_id",sid).order("date");return data||[];}
+async function dbAddMeasurement(sid,m){await sb.from("measurements").insert({student_id:sid,...m,date:new Date().toISOString().slice(0,10)});}
+async function dbWeights(sid){const{data}=await sb.from("weight_logs").select("*").eq("student_id",sid).order("date");return(data||[]).map(r=>({date:r.date,v:r.value}));}
+async function dbAddWeight(sid,v){await sb.from("weight_logs").insert({student_id:sid,value:v,date:new Date().toISOString().slice(0,10)});}
+async function dbWorkouts(sid){const{data}=await sb.from("workout_logs").select("*").eq("student_id",sid).order("date");return(data||[]).map(r=>({date:r.date,ex:r.exercise,w:r.weight_kg,r:r.reps,s:r.sets}));}
+async function dbAddWorkout(sid,log){await sb.from("workout_logs").insert({student_id:sid,exercise:log.ex,weight_kg:log.w,reps:log.r,sets:log.s,date:new Date().toISOString().slice(0,10)});}
+async function dbSupplements(sid){const{data}=await sb.from("supplements").select("*").eq("student_id",sid);return data||[];}
+async function dbAddSupplement(sid,s){const{data}=await sb.from("supplements").insert({student_id:sid,name:s.name,dose:s.dose,timing:s.timing,note:s.note||""}).select().single();return data;}
+async function dbDeleteSupplement(id){await sb.from("supplements").delete().eq("id",id);}
+
+// UI helpers
+function B({onClick,children,c="",disabled=false}){return <button onClick={onClick} disabled={disabled} className={"transition-all active:scale-95 "+c}>{children}</button>;}
+
+function MacroBar({p,c,f}){
+  const t=p*4+c*4+f*9||1;
+  return <div><div className="flex rounded-full overflow-hidden h-1.5 mb-1"><div style={{width:(p*4/t*100)+"%"}} className="bg-violet-500"/><div style={{width:(c*4/t*100)+"%"}} className="bg-amber-500"/><div style={{width:(f*9/t*100)+"%"}} className="bg-pink-500"/></div><div className="flex gap-2 text-xs"><span className="text-violet-400">P{p}g</span><span className="text-amber-400">K{c}g</span><span className="text-pink-400">Y{f}g</span></div></div>;
+}
+
+function WDelta({weights}){
+  if(!weights||weights.length<2)return null;
+  const d=(weights.at(-1).v-weights.at(-2).v).toFixed(1);
+  return <span className={"text-xs font-bold "+(d>0?"text-red-400":"text-emerald-400")}>{d>0?"▲":"▼"} {Math.abs(d)}kg <span className="text-slate-500 font-normal">{weights.at(-1).v}kg</span></span>;
+}
+
+function MiniChart({data,color}){
+  if(!data||data.length<2)return null;
+  const vals=data.map(d=>d.v??d);
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>((i/(vals.length-1))*58+1)+","+(22-((v-mn)/rng)*20)).join(" ");
+  return <svg width="60" height="24" className="overflow-visible"><polyline points={pts} fill="none" stroke={color||"#818cf8"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+
+// LOGIN
+function Login({onCoach,onStudent}){
+  const [mode,setMode]=useState("pick");
+  const [user,setUser]=useState("");const [pass,setPass]=useState("");const [err,setErr]=useState("");const [loading,setLoading]=useState(false);
+  async function go(){
+    setErr("");setLoading(true);
+    try{
+      if(mode==="coach"){
+        if(user.trim()===COACH.user&&pass===COACH.pass){onCoach();}else setErr("Hatali giris.");
+        setLoading(false);
+      }else{
+        const{data,error}=await sb.from("students").select("id,name,password");
+        setLoading(false);
+        if(error){setErr("Baglanti hatasi: "+error.message);return;}
+        const found=(data||[]).find(s=>s.name.trim().toLowerCase()===user.trim().toLowerCase()&&s.password.trim()===pass.trim());
+        if(found)onStudent(found.id);
+        else setErr("Ad soyad veya sifre hatali.");
+      }
+    }catch(e){setLoading(false);setErr("Hata: "+e.message);}
+  }
+  return(
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6">
+      <div className="mb-8 text-center"><div className="text-5xl mb-2">🦅</div><div className="text-2xl font-black"><span className="text-violet-300">Hawk</span><span className="text-white">Coach</span><span className="text-violet-400 text-lg"> Pro</span></div><div className="text-slate-500 text-sm mt-1">Profesyonel Kocluk Sistemi</div></div>
+      {mode==="pick"?(
+        <div className="w-full max-w-xs space-y-3">
+          <B onClick={()=>{setMode("coach");setErr("");}} c="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 text-base">🦅 Koc Girisi</B>
+          <B onClick={()=>{setMode("student");setErr("");}} c="w-full bg-slate-800 border border-slate-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 text-base">👤 Ogrenci Girisi</B>
+        </div>
+      ):(
+        <div className="w-full max-w-xs space-y-3">
+          <B onClick={()=>setMode("pick")} c="text-slate-400 text-sm">← Geri</B>
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3">
+            <div className="text-white font-bold text-sm">{mode==="coach"?"🦅 Koc":"👤 Ogrenci"} Girisi</div>
+            <input className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500" placeholder={mode==="coach"?"Kullanici adi":"Ad Soyad (tam olarak)"} value={user} onChange={e=>setUser(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/>
+            <input type="password" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500" placeholder="Sifre" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}/>
+            {err&&<div className="text-red-400 text-xs bg-red-900/30 border border-red-800/50 rounded-lg px-3 py-2">{err}</div>}
+            <B onClick={go} disabled={loading||!user||!pass} c="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-bold py-2.5 rounded-xl text-sm">{loading?"Yukleniyor...":"Giris Yap"}</B>
+          </div>
+          {mode==="student"&&<p className="text-slate-600 text-xs text-center">Sifrenizi kocunuzdan aliniz.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// COACH PANEL
+function CoachPanel({onLogout}){
+  const [students,setStudents]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState("students");
+  const [selId,setSelId]=useState(null);
+
+  useEffect(()=>{dbStudents().then(d=>{setStudents(d);setLoading(false);});},[]);
+
+  async function addStudent(f){
+    const pass=genPass();
+    const data=await dbSaveStudent({name:f.name,goal:f.goal,program:f.program,calories:2000,protein:150,carbs:200,fat:65,water:3,weight:parseFloat(f.weight)||0,height:parseFloat(f.height)||0,age:parseInt(f.age)||0,neck:parseFloat(f.neck)||0,waist:parseFloat(f.waist)||0,password:pass,notes:"",student_note:"",flags:[],custom_program:{},attendance:[]});
+    if(data)setStudents(p=>[...p,data]);
+    return pass;
+  }
+  async function updateStudent(s){
+    const data=await dbSaveStudent(s);
+    if(data)setStudents(p=>p.map(x=>x.id===s.id?data:x));
+  }
+  async function removeStudent(id){await dbDeleteStudent(id);setStudents(p=>p.filter(x=>x.id!==id));}
+
+  const sel=students.find(s=>s.id===selId);
+  const flags=students.filter(s=>(s.flags||[]).length>0).length;
+
+  if(loading)return<div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-violet-300 font-bold text-lg animate-pulse">Yukleniyor...</div></div>;
+
+  const TABS=[["students","Ogrenciler"],["progress","Ilerleme"],["measurements","Olculer"],["nutrition","Beslenme"],["notes","Notlar"],["supplements","Suppler"]];
+  return(
+    <div className="min-h-screen bg-slate-950">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-2"><span className="text-xl">🦅</span><span className="text-violet-300 font-black">Hawk</span><span className="text-white font-black">Coach</span><span className="text-slate-500 text-xs ml-1">Pro</span></div>
+        <div className="flex items-center gap-2">{flags>0&&<span className="text-red-400 text-xs bg-red-900/50 border border-red-700/50 px-2 py-1 rounded-full">🚩{flags}</span>}<B onClick={onLogout} c="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl">Cikis</B></div>
+      </div>
+      <div className="flex gap-1 overflow-x-auto px-3 py-2 bg-slate-900/60 border-b border-slate-800 sticky top-14 z-10">
+        {TABS.map(([id,lbl])=><B key={id} onClick={()=>{setTab(id);setSelId(null);}} c={"px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap "+(tab===id&&!selId?"bg-violet-600 text-white":"bg-slate-800 text-slate-400")}>{lbl}</B>)}
+      </div>
+      <div className="px-4 py-4 max-w-2xl mx-auto pb-10">
+        {selId&&sel?<StudentDetail student={sel} onBack={()=>setSelId(null)} onUpdate={updateStudent}/>:(
+          <>
+            {tab==="students"&&<CoachStudents students={students} onSelect={setSelId} onAdd={addStudent} onDelete={removeStudent}/>}
+            {tab==="progress"&&<CoachProgress students={students}/>}
+            {tab==="measurements"&&<CoachMeasurements students={students}/>}
+            {tab==="nutrition"&&<CoachNutrition students={students} onUpdate={updateStudent}/>}
+            {tab==="notes"&&<CoachNotes students={students} onUpdate={updateStudent}/>}
+            {tab==="supplements"&&<CoachSupplements students={students}/>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CoachStudents({students,onSelect,onAdd,onDelete}){
+  const [showAdd,setShowAdd]=useState(false);
+  const [f,setF]=useState({name:"",goal:"Kas kazanimi",program:"ppl-5",age:"",height:"",weight:"",neck:"",waist:""});
+  const [lastPass,setLastPass]=useState("");const [adding,setAdding]=useState(false);
+  function nd(k,v){setF(p=>({...p,[k]:v}));}
+  async function add(){if(!f.name.trim())return;setAdding(true);const pass=await onAdd(f);setLastPass(pass);setF({name:"",goal:"Kas kazanimi",program:"ppl-5",age:"",height:"",weight:"",neck:"",waist:""});setAdding(false);}
+  const flagged=students.filter(s=>(s.flags||[]).length>0);
+  return(
+    <div className="space-y-4">
+      {flagged.length>0&&<div className="bg-red-950/50 border border-red-800/60 rounded-2xl p-4 space-y-2"><div className="text-red-300 font-bold text-sm">🚩 Dikkat ({flagged.length})</div>{flagged.map(s=><div key={s.id} onClick={()=>onSelect(s.id)} className="flex items-center gap-3 cursor-pointer hover:bg-red-900/20 rounded-xl p-2 -mx-2"><div className="w-8 h-8 rounded-full bg-red-800/60 flex items-center justify-center text-white font-bold text-sm">{s.name[0]}</div><div className="flex-1"><div className="text-red-200 font-semibold text-sm">{s.name}</div><div className="flex gap-1 flex-wrap mt-0.5">{(s.flags||[]).map((fl,i)=><span key={i} className="text-xs bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full">{fl}</span>)}</div></div></div>)}</div>}
+      <div className="flex items-center justify-between"><span className="text-violet-300 font-bold">Ogrenciler ({students.length})</span><B onClick={()=>setShowAdd(!showAdd)} c="bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-xl">+ Ogrenci Ekle</B></div>
+      {showAdd&&<div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-3">
+        <input className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" placeholder="Ad Soyad *" value={f.name} onChange={e=>nd("name",e.target.value)}/>
+        <select className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={f.goal} onChange={e=>nd("goal",e.target.value)}>{["Kas kazanimi","Yag yakimi","Rekomp","Dayaniklilik","Guc"].map(g=><option key={g}>{g}</option>)}</select>
+        <select className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={f.program} onChange={e=>nd("program",e.target.value)}>{Object.entries(PROGRAMS).map(([k,v])=><option key={k} value={k}>{v.name}</option>)}</select>
+        <div className="grid grid-cols-2 gap-2">{[["age","Yas"],["height","Boy cm"],["weight","Kilo kg"],["neck","Boyun cm"],["waist","Bel cm"]].map(([k,l])=><div key={k}><div className="text-slate-400 text-xs mb-1">{l}</div><input type="number" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-white text-sm focus:outline-none" placeholder="0" value={f[k]} onChange={e=>nd(k,e.target.value)}/></div>)}</div>
+        <B onClick={add} disabled={adding||!f.name.trim()} c="w-full bg-violet-600 disabled:opacity-40 text-white font-bold py-2.5 rounded-xl text-sm">{adding?"Kaydediliyor...":"Olustur & Sifre Al"}</B>
+        {lastPass&&<div className="bg-emerald-900/40 border border-emerald-700/50 rounded-xl p-3"><div className="text-emerald-400 text-xs mb-1">Giris sifresi:</div><div className="font-mono font-black text-2xl text-emerald-200 tracking-widest">{lastPass}</div></div>}
+      </div>}
+      <div className="space-y-2">{students.map(s=>{
+        const bmi=s.weight&&s.height?(s.weight/((s.height/100)**2)).toFixed(1):null;
+        return(
+          <div key={s.id} onClick={()=>onSelect(s.id)} className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-violet-500/50 rounded-2xl p-3 cursor-pointer transition-all">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white font-black text-base shrink-0">{s.name[0]}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">{(s.flags||[]).length>0&&<span className="text-red-400 text-xs">🚩</span>}<span className="text-white font-bold text-sm">{s.name}</span>{s.age?<span className="text-slate-500 text-xs">{s.age}y</span>:null}</div>
+                <div className="text-violet-400 text-xs">{PROGRAMS[s.program]?.name?.split("(")[0].trim()}</div>
+                <div className="text-slate-500 text-xs">{s.goal} · {s.calories}kcal</div>
+                {s.height?<div className="text-slate-600 text-xs">{s.height}cm · {s.weight}kg{bmi?" · BMI "+bmi:""}{s.neck?" · Boyun "+s.neck+"cm":""}</div>:null}
+                <MacroBar p={s.protein||0} c={s.carbs||0} f={s.fat||0}/>
+              </div>
+              <div className="text-slate-500 text-xs shrink-0">{daysSince(s.last_seen||"2025-01-01")}</div>
+            </div>
+          </div>
+        );
+      })}</div>
+    </div>
+  );
+}
+
+function CoachProgress({students}){
+  const [sid,setSid]=useState(students[0]?.id||"");
+  const [logs,setLogs]=useState([]);const [open,setOpen]=useState(null);
+  useEffect(()=>{if(sid)dbWorkouts(sid).then(setLogs);},[sid]);
+  const exList=[...new Set(logs.map(l=>l.ex))];
+  return(
+    <div className="space-y-4">
+      <div className="text-violet-300 font-bold text-base">Progresif Overload</div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{students.map(st=><B key={st.id} onClick={()=>{setSid(st.id);setOpen(null);}} c={"px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border "+(sid===st.id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{st.name.split(" ")[0]}</B>)}</div>
+      {exList.length===0&&<div className="text-slate-500 text-sm text-center py-8">Henuz antrenman kaydi yok.</div>}
+      <div className="space-y-2">{exList.map(ex=>{
+        const d=logs.filter(l=>l.ex===ex).sort((a,b)=>a.date.localeCompare(b.date));
+        const trend=d.length>=2?(d.at(-1).w>d.at(-2).w?"up":d.at(-1).w<d.at(-2).w?"down":"stable"):"stable";
+        const tCol=trend==="up"?"text-emerald-400":trend==="down"?"text-red-400":"text-amber-400";
+        const isOpen=open===ex;
+        return(
+          <div key={ex} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 p-3 cursor-pointer" onClick={()=>setOpen(isOpen?null:ex)}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2"><span className="text-white text-sm font-bold">{ex}</span><span className={"text-xs font-bold "+tCol}>{trend==="up"?"▲":trend==="down"?"▼":"→"}</span></div>
+                {d.at(-1)&&<div className="text-slate-400 text-xs">Son: <span className="text-white font-semibold">{d.at(-1).w}kg x {d.at(-1).r}</span> · {fmtDate(d.at(-1).date)}</div>}
+              </div>
+              <MiniChart data={d.map(x=>x.w)} color={trend==="up"?"#34d399":trend==="down"?"#f87171":"#fbbf24"}/>
+              <span className="text-slate-500 text-xs">{isOpen?"▲":"▼"}</span>
+            </div>
+            {isOpen&&<div className="px-3 pb-3 pt-1 border-t border-slate-700/40 space-y-1">{d.map((entry,i)=><div key={i} className="flex items-center justify-between text-xs"><span className="text-slate-500">{fmtDate(entry.date)}</span><span className="text-white">{entry.w}kg x {entry.r} ({entry.s} set)</span>{i>0&&<span className={d[i].w>d[i-1].w?"text-emerald-400":d[i].w<d[i-1].w?"text-red-400":"text-amber-400"}>{d[i].w>d[i-1].w?"+":""}{(d[i].w-d[i-1].w).toFixed(1)}kg</span>}</div>)}</div>}
+          </div>
+        );
+      })}</div>
+    </div>
+  );
+}
+
+function CoachMeasurements({students}){
+  const [sid,setSid]=useState(students[0]?.id||"");
+  const [ms,setMs]=useState([]);const [sel,setSel]=useState("bel");
+  useEffect(()=>{if(sid)dbMeasurements(sid).then(setMs);},[sid]);
+  const lat=ms.at(-1);const prv=ms.at(-2);
+  function delta(k){if(!lat||!prv)return null;return(lat[k]-prv[k]).toFixed(1);}
+  function isGood(k,d){if(d===null)return null;return["bel","kalca","boyun"].includes(k)?parseFloat(d)<0:parseFloat(d)>0;}
+  const chartData=ms.map(m=>({date:m.date,v:m[sel]}));
+  return(
+    <div className="space-y-4">
+      <div className="text-violet-300 font-bold text-base">Olcu Takibi</div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{students.map(st=>{const hasNew=st.measurements?.length>0;return<B key={st.id} onClick={()=>setSid(st.id)} c={"relative px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border "+(sid===st.id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{st.name.split(" ")[0]}</B>;})}</div>
+      {lat&&(<>
+        <div className="grid grid-cols-4 gap-2">{MKEYS.map(k=>{const d=delta(k);const good=isGood(k,d);return(<B key={k} onClick={()=>setSel(k)} c={"rounded-2xl p-2 text-center border "+(sel===k?"bg-slate-700 border-violet-500":"bg-slate-800/60 border-slate-700/50")}><div className="text-slate-400 text-xs">{MLBL[k]}</div><div className="text-white font-black text-base">{lat[k]||"—"}</div>{d!==null&&<div className={"text-xs font-bold "+(good?"text-emerald-400":good===false?"text-red-400":"text-amber-400")}>{parseFloat(d)>0?"+":""}{d}</div>}</B>);})}</div>
+        {chartData.length>=2&&<div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3">
+          <div className="text-slate-300 text-xs font-semibold mb-2">{MLBL[sel]} trendi (cm)</div>
+          <svg width="100%" viewBox="0 0 280 80" className="overflow-visible">{(()=>{
+            const vals=chartData.map(d=>d.v);
+            const mn=Math.min(...vals)-1,mx=Math.max(...vals)+1,rng=mx-mn||1;
+            const pts=vals.map((v,i)=>((i/(vals.length-1))*260+10)+","+(70-((v-mn)/rng)*60)).join(" ");
+            const col=vals.at(-1)<=vals[0]?"#34d399":"#f87171";
+            return <><polyline points={pts} fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>{vals.map((v,i)=><circle key={i} cx={(i/(vals.length-1))*260+10} cy={70-((v-mn)/rng)*60} r="3.5" fill={col}/>)}</>;
+          })()}</svg>
+          <div className="flex justify-between mt-1">{chartData.map((d,i)=><span key={i} className="text-slate-600 text-xs">{fmtDate(d.date)}</span>)}</div>
+        </div>}
+      </>)}
+      {ms.length===0&&<div className="text-slate-500 text-sm text-center py-6">Olcu girilmemis.</div>}
+    </div>
+  );
+}
+
+function CoachNutrition({students,onUpdate}){
+  const [sub,setSub]=useState("plan");
+  const [sid,setSid]=useState(students[0]?.id||"");
+  const [meals,setMeals]=useState([{id:genId(),name:"Sabah",foods:[]},{id:genId(),name:"Ogle",foods:[]},{id:genId(),name:"Aksam",foods:[]}]);
+  const [searchMealId,setSearchMealId]=useState(null);
+  const [q,setQ]=useState("");const [cat,setCat]=useState("all");const [grams,setGrams]=useState({});
+  const [libCat,setLibCat]=useState("protein");const [libQ,setLibQ]=useState("");
+  const [customFoods,setCustomFoods]=useState({});const [showAddCustom,setShowAddCustom]=useState(false);
+  const [nf,setNf]=useState({name:"",cal:"",p:"",c:"",f:"",cat:"protein"});
+  const s=students.find(x=>x.id===sid);
+  const target=s?{cal:s.calories,p:s.protein,c:s.carbs,f:s.fat}:null;
+  const tots=meals.reduce((acc,m)=>m.foods.reduce((a,f)=>({cal:a.cal+f.cal,p:a.p+f.p,c:a.c+f.c,f:a.f+f.f}),acc),{cal:0,p:0,c:0,f:0});
+  const results=useMemo(()=>{
+    const pool=cat==="all"?Object.entries(FOOD_DB).flatMap(([k,v])=>v.map(f=>({...f,cat:k}))):(FOOD_DB[cat]||[]).map(f=>({...f,cat}));
+    return (q?pool.filter(f=>f.n.toLowerCase().includes(q.toLowerCase())):pool).slice(0,40);
+  },[q,cat]);
+  const libFoods=useMemo(()=>{
+    const base=(FOOD_DB[libCat]||[]).map(f=>({...f,custom:false}));
+    const custom=(customFoods[libCat]||[]).map(f=>({...f,custom:true}));
+    return[...base,...custom].filter(f=>!libQ||f.n.toLowerCase().includes(libQ.toLowerCase()));
+  },[libCat,libQ,customFoods]);
+  function addFoodToMeal(mId,food){setMeals(p=>p.map(m=>m.id===mId?{...m,foods:[...m.foods,food]}:m));}
+  function rmFood(mId,fId){setMeals(p=>p.map(m=>m.id===mId?{...m,foods:m.foods.filter(f=>f.id!==fId)}:m));}
+  function calcM(food,g){const r=g/100;return{cal:food.cal*r,p:food.p*r,c:food.c*r,f:food.f*r};}
+  return(
+    <div className="space-y-4">
+      <div className="flex gap-1.5">{[["plan","Plan"],["library","Kutuphane"]].map(([id,lbl])=><B key={id} onClick={()=>setSub(id)} c={"px-4 py-2 rounded-xl text-xs font-bold border "+(sub===id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{lbl}</B>)}</div>
+      {sub==="plan"&&<div className="space-y-3">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">{students.map(st=><B key={st.id} onClick={()=>setSid(st.id)} c={"px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border "+(sid===st.id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{st.name.split(" ")[0]}</B>)}</div>
+        {target&&<div className="bg-slate-800/60 border border-slate-700/40 rounded-2xl p-3 space-y-2">
+          <div className="flex items-center justify-between"><span className="text-white font-black text-2xl">{Math.round(tots.cal)}</span><span className="text-slate-400 text-sm">/ {target.cal} kcal</span></div>
+          <div className="grid grid-cols-3 gap-2">{[["Protein",tots.p,target.p,"bg-violet-500","text-violet-300"],["Karb",tots.c,target.c,"bg-amber-500","text-amber-300"],["Yag",tots.f,target.f,"bg-pink-500","text-pink-300"]].map(([l,v,tv,bar,col])=><div key={l}><div className="flex justify-between mb-1"><span className={"text-xs "+col}>{l}</span><span className="text-white text-xs font-bold">{Math.round(v)}g</span></div><div className="h-1.5 bg-slate-700 rounded-full overflow-hidden"><div className={bar+" h-full rounded-full"} style={{width:Math.min(100,Math.round(v/(tv||1)*100))+"%"}}/></div></div>)}</div>
+          {tots.cal>0&&<div className="flex gap-3 text-xs pt-1 border-t border-slate-700/50"><span className="text-slate-400">Kalan:</span><span className="text-white">{Math.round(target.cal-tots.cal)}kcal</span><span className="text-violet-400">P{Math.round(target.p-tots.p)}g</span><span className="text-amber-400">K{Math.round(target.c-tots.c)}g</span><span className="text-pink-400">Y{Math.round(target.f-tots.f)}g</span></div>}
+        </div>}
+        {meals.map(m=>{
+          const mt=m.foods.reduce((a,f)=>({cal:a.cal+f.cal,p:a.p+f.p,c:a.c+f.c,f:a.f+f.f}),{cal:0,p:0,c:0,f:0});
+          return<div key={m.id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-800/90 border-b border-slate-700/40">
+              <span className="text-white font-bold text-sm flex-1">{m.name}</span>
+              {m.foods.length>0&&<span className="text-slate-500 text-xs">{Math.round(mt.cal)}kcal</span>}
+              <B onClick={()=>setSearchMealId(m.id)} c="bg-violet-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">+ Besin</B>
+              <B onClick={()=>setMeals(p=>p.filter(x=>x.id!==m.id))} c="text-slate-600 hover:text-red-400 text-lg">x</B>
+            </div>
+            <div className="divide-y divide-slate-700/30">
+              {m.foods.length===0&&<div className="text-slate-600 text-xs italic text-center py-3">Besin ekle...</div>}
+              {m.foods.map(food=><div key={food.id} className="flex items-center gap-2 px-3 py-2"><span className="text-sm">{CAT_E[food.cat]||"🍽️"}</span><div className="flex-1 min-w-0"><div className="text-white text-xs font-medium">{food.n} <span className="text-slate-500">{food.grams}g</span></div><div className="flex gap-2 text-xs"><span className="text-slate-400">{Math.round(food.cal)}kcal</span><span className="text-violet-400">P{food.p.toFixed(1)}</span><span className="text-amber-400">K{food.c.toFixed(1)}</span><span className="text-pink-400">Y{food.f.toFixed(1)}</span></div></div><B onClick={()=>rmFood(m.id,food.id)} c="text-slate-600 hover:text-red-400 text-base">x</B></div>)}
+            </div>
+          </div>;
+        })}
+        <B onClick={()=>setMeals(p=>[...p,{id:genId(),name:"Ogun "+(p.length+1),foods:[]}])} c="w-full border-2 border-dashed border-slate-600 hover:border-violet-500 text-slate-500 hover:text-violet-400 text-sm py-3 rounded-2xl transition-all">+ Ogun Ekle</B>
+        {searchMealId&&<div className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-2xl w-full max-w-lg flex flex-col" style={{maxHeight:"85vh"}}>
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-800 shrink-0"><span className="text-white font-bold text-sm">Besin Ekle</span><B onClick={()=>setSearchMealId(null)} c="text-slate-400 text-2xl leading-none">x</B></div>
+            <div className="px-4 py-2 border-b border-slate-800 shrink-0 space-y-2">
+              <input autoFocus placeholder="Ara..." className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={q} onChange={e=>setQ(e.target.value)}/>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                <B onClick={()=>setCat("all")} c={"px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 "+(cat==="all"?"bg-violet-600 text-white":"bg-slate-700 text-slate-400")}>Tumu</B>
+                {Object.entries(CAT_E).map(([k,e])=><B key={k} onClick={()=>setCat(k)} c={"px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 "+(cat===k?"bg-violet-600 text-white":"bg-slate-700 text-slate-400")}>{e}</B>)}
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 p-3 space-y-2">{results.map((food,i)=>{
+              const key=food.n+i;const g=parseFloat(grams[key])||100;const m=calcM(food,g);
+              const mode=grams[key+"_m"]||"g";const actualG=mode==="pc"&&food.pc?(parseFloat(grams[key])||1)*food.pc.g:g;const am=calcM(food,actualG);
+              return<div key={i} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-2.5">
+                <div className="flex items-start gap-2"><span className="text-lg mt-0.5">{CAT_E[food.cat]||"🍽️"}</span><div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-semibold">{food.n}</div>
+                  <div className="flex gap-2 text-xs mt-0.5"><span className="text-slate-300 font-bold">{Math.round(am.cal)}kcal</span><span className="text-violet-400">P{am.p.toFixed(1)}</span><span className="text-amber-400">K{am.c.toFixed(1)}</span><span className="text-pink-400">Y{am.f.toFixed(1)}</span></div>
+                  <div className="flex items-center gap-2 mt-2">
+                    {food.pc&&<div className="flex rounded-lg overflow-hidden border border-slate-600 shrink-0"><B onClick={()=>setGrams(p=>({...p,[key+"_m"]:"g"}))} c={"px-2 py-1 text-xs font-semibold "+(mode==="g"?"bg-violet-600 text-white":"bg-slate-800 text-slate-400")}>g</B><B onClick={()=>setGrams(p=>({...p,[key+"_m"]:"pc"}))} c={"px-2 py-1 text-xs font-semibold "+(mode==="pc"?"bg-violet-600 text-white":"bg-slate-800 text-slate-400")}>tane</B></div>}
+                    <input type="number" placeholder={mode==="pc"?"adet":"gram"} className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none text-center" value={grams[key]||""} onChange={e=>setGrams(p=>({...p,[key]:e.target.value}))}/>
+                    {mode==="pc"&&food.pc&&<span className="text-slate-500 text-xs">{food.pc.l}</span>}
+                    <B onClick={()=>addFoodToMeal(searchMealId,{...food,id:genId(),grams:actualG,...calcM(food,actualG)})} c="ml-auto bg-violet-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shrink-0">+ Ekle</B>
+                  </div>
+                </div></div>
+              </div>;
+            })}</div>
+          </div>
+        </div>}
+      </div>}
+      {sub==="library"&&<div className="space-y-3">
+        <div className="flex items-center justify-between"><span className="text-slate-400 text-xs">{libFoods.length} besin</span><B onClick={()=>setShowAddCustom(!showAddCustom)} c="bg-violet-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">+ Ozel Besin</B></div>
+        {showAddCustom&&<div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">
+          <input placeholder="Ad *" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={nf.name} onChange={e=>setNf(p=>({...p,name:e.target.value}))}/>
+          <div className="grid grid-cols-4 gap-2">{[["cal","Kal"],["p","Prot"],["c","Karb"],["f","Yag"]].map(([k,l])=><div key={k}><div className="text-slate-500 text-xs mb-1">{l}</div><input type="number" placeholder="0" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-white text-xs focus:outline-none" value={nf[k]} onChange={e=>setNf(p=>({...p,[k]:e.target.value}))}/></div>)}</div>
+          <select className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={nf.cat} onChange={e=>setNf(p=>({...p,cat:e.target.value}))}>{Object.entries(CAT_L).map(([k,v])=><option key={k} value={k}>{CAT_E[k]} {v}</option>)}</select>
+          <B onClick={()=>{if(!nf.name.trim())return;setCustomFoods(p=>({...p,[nf.cat]:[...(p[nf.cat]||[]),{id:genId(),n:nf.name.trim(),cal:parseFloat(nf.cal)||0,p:parseFloat(nf.p)||0,c:parseFloat(nf.c)||0,f:parseFloat(nf.f)||0}]}));setNf({name:"",cal:"",p:"",c:"",f:"",cat:"protein"});setShowAddCustom(false);}} c="w-full bg-violet-600 text-white font-bold py-2 rounded-xl text-sm">Ekle</B>
+        </div>}
+        <input placeholder="Kutuphane ara..." className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={libQ} onChange={e=>setLibQ(e.target.value)}/>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">{Object.entries(CAT_E).map(([k,e])=><B key={k} onClick={()=>setLibCat(k)} c={"px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border shrink-0 "+(libCat===k?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{e} {CAT_L[k]}</B>)}</div>
+        <div className="space-y-1.5">{libFoods.map((food,i)=><div key={i} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3"><div className="flex items-center gap-2"><span className="text-white text-sm font-semibold">{food.n}</span>{food.custom&&<span className="text-xs bg-violet-800/60 text-violet-300 px-1.5 py-0.5 rounded-full border border-violet-700/50">ozel</span>}{food.pc&&<span className="text-slate-500 text-xs">tane✓</span>}</div><div className="flex gap-3 text-xs mt-0.5"><span className="text-slate-300 font-bold">{food.cal}kcal</span><span className="text-violet-400">P{food.p}g</span><span className="text-amber-400">K{food.c}g</span><span className="text-pink-400">Y{food.f}g</span>{food.pc&&<span className="text-slate-500">1 {food.pc.l}={food.pc.g}g</span>}</div></div>)}</div>
+      </div>}
+    </div>
+  );
+}
+
+function CoachNotes({students,onUpdate}){
+  const [editId,setEditId]=useState(null);const [draft,setDraft]=useState("");const MAX=300;
+  return(
+    <div className="space-y-3">
+      <div className="text-violet-300 font-bold text-base">Notlar</div>
+      {students.map(s=>(
+        <div key={s.id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-700/50">
+            <div className="flex items-center gap-2"><div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white font-bold text-xs">{s.name[0]}</div><span className="text-white font-semibold text-sm">{s.name}</span>{(s.flags||[]).length>0&&<span className="text-red-400 text-xs">🚩</span>}{s.student_note&&<span className="text-emerald-400 text-xs bg-emerald-900/30 border border-emerald-700/40 px-1.5 py-0.5 rounded-full">yeni not</span>}</div>
+            <div className="flex gap-2"><B onClick={()=>editId===s.id?(onUpdate({...s,notes:draft.slice(0,MAX)}),setEditId(null)):(setEditId(s.id),setDraft(s.notes||""))} c={"text-xs font-semibold px-3 py-1 rounded-lg "+(editId===s.id?"bg-violet-600 text-white":"bg-slate-700 text-slate-300")}>{editId===s.id?"Kaydet":"Duzenle"}</B>{editId===s.id&&<B onClick={()=>setEditId(null)} c="text-slate-500 text-xs px-2 py-1">X</B>}</div>
+          </div>
+          {s.student_note&&<div className="px-4 py-3 bg-emerald-950/20 border-b border-emerald-900/30"><div className="text-emerald-300 text-xs font-semibold mb-1">Ogrenciden:</div><p className="text-slate-300 text-sm">{s.student_note}</p></div>}
+          {editId===s.id?<div className="p-3 space-y-2"><textarea rows={3} maxLength={MAX} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none resize-none" value={draft} onChange={e=>setDraft(e.target.value.slice(0,MAX))}/><div className="flex justify-end"><span className={"text-xs "+(draft.length>=MAX?"text-red-400":draft.length>250?"text-amber-400":"text-slate-500")}>{draft.length}/{MAX}</span></div></div>
+          :<div className="px-4 py-3">{s.notes?<p className="text-slate-300 text-sm">{s.notes}</p>:<p className="text-slate-600 text-sm italic">Not eklenmemis...</p>}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CoachSupplements({students}){
+  const [sid,setSid]=useState(students[0]?.id||"");
+  const [sups,setSups]=useState([]);const [showAdd,setShowAdd]=useState(false);const [ns,setNs]=useState({name:"",dose:"",timing:"",note:""});
+  useEffect(()=>{if(sid)dbSupplements(sid).then(setSups);},[sid]);
+  async function add(){if(!ns.name.trim())return;const d=await dbAddSupplement(sid,ns);if(d)setSups(p=>[...p,d]);setNs({name:"",dose:"",timing:"",note:""});setShowAdd(false);}
+  return(
+    <div className="space-y-4">
+      <div className="text-violet-300 font-bold text-base">Supplement Programi</div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{students.map(st=><B key={st.id} onClick={()=>setSid(st.id)} c={"px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border "+(sid===st.id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{st.name.split(" ")[0]}</B>)}</div>
+      <B onClick={()=>setShowAdd(!showAdd)} c="w-full bg-violet-600 text-white font-bold py-2 rounded-xl text-sm">+ Supplement Ekle</B>
+      {showAdd&&<div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">{[["name","Ad *"],["dose","Doz"],["timing","Zamanlama"],["note","Not"]].map(([k,pl])=><input key={k} placeholder={pl} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={ns[k]} onChange={e=>setNs(p=>({...p,[k]:e.target.value}))}/>)}<B onClick={add} c="w-full bg-violet-600 text-white font-bold py-2 rounded-xl text-sm">Ekle</B></div>}
+      <div className="space-y-2">{sups.length===0&&<div className="text-slate-500 text-sm text-center py-4">Supplement eklenmemis</div>}{sups.map(sup=><div key={sup.id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 flex items-start gap-3"><span className="text-2xl">💊</span><div className="flex-1"><div className="text-white font-bold text-sm">{sup.name}</div><div className="flex flex-wrap gap-x-3 text-xs mt-0.5"><span className="text-slate-400">{sup.dose}</span><span className="text-violet-400">{sup.timing}</span>{sup.note&&<span className="text-slate-500">{sup.note}</span>}</div></div><B onClick={async()=>{await dbDeleteSupplement(sup.id);setSups(p=>p.filter(x=>x.id!==sup.id));}} c="text-slate-600 hover:text-red-400 text-lg">x</B></div>)}</div>
+    </div>
+  );
+}
+
+function StudentDetail({student,onBack,onUpdate}){
+  const [sec,setSec]=useState("profile");
+  const [local,setLocal]=useState({...student});
+  const [editProg,setEditProg]=useState(student.program||"ppl-5");
+  const [customProg,setCustomProg]=useState(student.custom_program||{});
+  const [flagInput,setFlagInput]=useState("");const [saving,setSaving]=useState(false);
+  const prog=PROGRAMS[editProg];
+  const bmi=local.weight&&local.height?(local.weight/((local.height/100)**2)).toFixed(1):null;
+  async function save(){setSaving(true);await onUpdate({...local,program:editProg,custom_program:customProg});setSaving(false);}
+  return(
+    <div className="space-y-4">
+      <B onClick={onBack} c="text-violet-400 text-sm">← Geri</B>
+      <div className="bg-gradient-to-br from-violet-900/30 to-indigo-900/30 border border-violet-700/40 rounded-2xl p-4">
+        <div className="flex items-start gap-3"><div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl">{student.name[0]}</div>
+          <div className="flex-1"><div className="text-white font-black text-lg">{student.name}</div><div className="text-violet-300 text-sm">{student.goal}</div>
+            <div className="flex gap-3 mt-1 text-xs text-slate-400 flex-wrap">{student.age?<span>{student.age}y</span>:null}{student.height?<span>{student.height}cm</span>:null}{student.weight?<span>{student.weight}kg</span>:null}{bmi?<span>BMI {bmi}</span>:null}{student.neck?<span>Boyun {student.neck}cm</span>:null}</div>
+          </div>
+        </div>
+        <div className="mt-2 pt-2 border-t border-violet-700/30 flex justify-between"><span className="text-slate-500 text-xs">Sifre</span><span className="font-mono text-violet-400 text-sm font-bold tracking-widest">{student.password}</span></div>
+      </div>
+      <div className="flex gap-1 overflow-x-auto pb-1">{[["profile","Profil"],["program","Program"],["flags","Bayraklar"]].map(([id,lbl])=><B key={id} onClick={()=>setSec(id)} c={"px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border "+(sec===id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{lbl}</B>)}</div>
+      {sec==="profile"&&<div className="space-y-3"><div className="grid grid-cols-2 gap-2">{[["Ad Soyad","name","text"],["Hedef","goal","text"],["Yas","age","number"],["Boy cm","height","number"],["Boyun cm","neck","number"],["Bel cm","waist","number"],["Kalori","calories","number"],["Protein g","protein","number"],["Karbonhidrat","carbs","number"],["Yag g","fat","number"],["Su L","water","number"],["Agirlik kg","weight","number"]].map(([l,k,t])=><div key={k}><div className="text-slate-400 text-xs mb-1">{l}</div><input type={t} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={local[k]||""} onChange={e=>setLocal(p=>({...p,[k]:t==="number"?parseFloat(e.target.value)||0:e.target.value}))}/></div>)}</div><B onClick={save} disabled={saving} c="w-full bg-violet-600 disabled:opacity-40 text-white font-bold py-2 rounded-xl text-sm">{saving?"Kaydediliyor...":"Kaydet"}</B></div>}
+      {sec==="program"&&<div className="space-y-3"><select className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={editProg} onChange={e=>setEditProg(e.target.value)}>{Object.entries(PROGRAMS).map(([k,v])=><option key={k} value={k}>{v.name}</option>)}</select>
+        <div className="text-violet-300 font-semibold text-sm">Ozellestir</div>
+        {prog?.days.filter(d=>d.ex.length>0).map(day=><div key={day.id} className="space-y-1.5"><div className="text-slate-400 text-xs font-bold uppercase">{day.label}</div>{day.ex.map((ex,i)=>{const ck=day.id+"-"+i;const cu=customProg[ck]||{};return<div key={i} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-2"><div className="text-slate-500 text-xs mb-1.5">{ex.n} · {ex.s}</div><div className="flex gap-2"><input className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none" placeholder={ex.n} value={cu.name||""} onChange={e=>setCustomProg(p=>({...p,[ck]:{...p[ck],name:e.target.value}}))}/><input className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none" placeholder={ex.s} value={cu.sets||""} onChange={e=>setCustomProg(p=>({...p,[ck]:{...p[ck],sets:e.target.value}}))}/></div></div>;})}</div>)}
+        <B onClick={save} disabled={saving} c="w-full bg-violet-600 disabled:opacity-40 text-white font-bold py-2 rounded-xl text-sm">{saving?"Kaydediliyor...":"Kaydet"}</B>
+      </div>}
+      {sec==="flags"&&<div className="space-y-3"><div className="flex gap-1.5 flex-wrap">{(local.flags||[]).map((fl,i)=><div key={i} className="flex items-center gap-1 bg-red-900/40 border border-red-700/50 rounded-full px-2.5 py-1"><span className="text-red-300 text-xs">{fl}</span><B onClick={()=>setLocal(p=>({...p,flags:p.flags.filter((_,j)=>j!==i)}))} c="text-red-500 text-sm">x</B></div>)}{!(local.flags||[]).length&&<span className="text-slate-500 text-sm">Bayrak yok</span>}</div>
+        <div className="flex gap-2"><input className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" placeholder="Yeni bayrak..." value={flagInput} onChange={e=>setFlagInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&flagInput.trim()&&(setLocal(p=>({...p,flags:[...(p.flags||[]),flagInput]})),setFlagInput(""))}/><B onClick={()=>flagInput.trim()&&(setLocal(p=>({...p,flags:[...(p.flags||[]),flagInput]})),setFlagInput(""))} c="bg-red-700 text-white font-bold px-3 py-2 rounded-xl">+</B></div>
+        <div className="flex gap-1.5 flex-wrap">{["Antrenman Kacirdi","Kilo Artisi","Sakatlık","Motivasyon Dusuk","Diyet Uymuyor"].map(fl=><B key={fl} onClick={()=>setLocal(p=>({...p,flags:[...(p.flags||[]),fl]}))} c="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded-lg">+ {fl}</B>)}</div>
+        <B onClick={save} disabled={saving} c="w-full bg-violet-600 disabled:opacity-40 text-white font-bold py-2 rounded-xl text-sm">{saving?"Kaydediliyor...":"Kaydet"}</B>
+      </div>}
+    </div>
+  );
+}
+
+// STUDENT PANEL
+function StudentPanel({studentId,onLogout}){
+  const [student,setStudent]=useState(null);
+  const [ms,setMs]=useState([]);const [sups,setSups]=useState([]);const [logs,setLogs]=useState([]);
+  const [tab,setTab]=useState("workout");const [loading,setLoading]=useState(true);
+  const [entry,setEntry]=useState(Object.fromEntries(MKEYS.map(k=>[k,""])));
+  const [mSaved,setMSaved]=useState(false);
+  const [waterMl,setWaterMl]=useState(0);const [wStep,setWStep]=useState(250);
+  const [setLogs2,setSetLogs2]=useState({});const [inputs,setInputs]=useState({});const [savedEx,setSavedEx]=useState({});
+  const [sNote,setSNote]=useState("");const [noteSaved,setNoteSaved]=useState(false);
+  const [showPass,setShowPass]=useState(false);const [np,setNp]=useState("");const [np2,setNp2]=useState("");const [pm,setPm]=useState("");
+
+  useEffect(()=>{
+    async function init(){
+      try{
+        const{data}=await sb.from("students").select("*").eq("id",studentId).single();
+        if(data){setStudent(data);setSNote(data.student_note||"");}
+        const[m,s,l]=await Promise.all([dbMeasurements(studentId),dbSupplements(studentId),dbWorkouts(studentId)]);
+        setMs(m);setSups(s);setLogs(l);
+      }catch(e){console.error(e);}
+      setLoading(false);
+    }
+    init();
+  },[studentId]);
+
+  if(loading)return<div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-violet-300 font-bold animate-pulse">Yukleniyor...</div></div>;
+  if(!student)return<div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-red-400">Ogrenci bulunamadi.</div></div>;
+
+  const prog=PROGRAMS[student.program||"ppl-5"];
+  const workDays=prog?prog.days.filter(d=>d.ex.length>0):[];
+  const [selDay,setSelDay]=useState(workDays[0]?.id||"");
+  const day=workDays.find(d=>d.id===selDay)||workDays[0];
+  const lat=ms.at(-1);const prv=ms.at(-2);
+  const wGoal=(student.water||3)*1000;
+  const wPct=Math.min(100,Math.round(waterMl/wGoal*100));
+
+  async function addSet(did,exName){
+    const inp=inputs[exName]||{w:"",r:""};
+    if(!inp.w&&!inp.r)return;
+    const newSet={w:parseFloat(inp.w)||0,r:parseInt(inp.r)||0};
+    setSetLogs2(p=>{const d={...(p[did]||{})};d[exName]=[...(d[exName]||[]),newSet];return{...p,[did]:d};});
+    setInputs(p=>({...p,[exName]:{w:"",r:""}}));
+    setSavedEx(p=>({...p,[exName]:true}));setTimeout(()=>setSavedEx(p=>({...p,[exName]:false})),1200);
+    await dbAddWorkout(studentId,{ex:exName,w:newSet.w,r:newSet.r,s:1});
+    dbWorkouts(studentId).then(setLogs);
+  }
+  async function saveMeasurement(){
+    if(!Object.values(entry).some(v=>v))return;
+    const m=Object.fromEntries(MKEYS.map(k=>[k,parseFloat(entry[k])||0]));
+    await dbAddMeasurement(studentId,m);
+    dbMeasurements(studentId).then(setMs);
+    setEntry(Object.fromEntries(MKEYS.map(k=>[k,""])));
+    setMSaved(true);setTimeout(()=>setMSaved(false),2500);
+  }
+  async function saveNote(){await sb.from("students").update({student_note:sNote}).eq("id",studentId);setNoteSaved(true);setTimeout(()=>setNoteSaved(false),2000);}
+  async function changePass(){
+    if(np.length<4){setPm("En az 4 karakter.");return;}
+    if(np!==np2){setPm("Sifreler eslesmedi.");return;}
+    await sb.from("students").update({password:np}).eq("id",studentId);
+    setPm("Guncellendi!");setNp("");setNp2("");setTimeout(()=>{setPm("");setShowPass(false);},2000);
+  }
+
+  const TABS=[["workout","Antrenman"],["nutrition","Beslenme"],["measure","Olculer"],["profile","Profil"]];
+  return(
+    <div className="min-h-screen bg-slate-950">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm">{student.name[0]}</div><div><div className="text-white font-bold text-sm">{student.name}</div><div className="text-violet-400 text-xs">{student.goal}</div></div></div>
+        <B onClick={onLogout} c="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl">Cikis</B>
+      </div>
+      <div className="flex gap-1 px-3 py-2 bg-slate-900/60 border-b border-slate-800 sticky top-14 z-10">
+        {TABS.map(([id,lbl])=><B key={id} onClick={()=>setTab(id)} c={"flex-1 py-1.5 rounded-xl text-xs font-semibold text-center "+(tab===id?"bg-violet-600 text-white":"bg-slate-800 text-slate-400")}>{lbl}</B>)}
+      </div>
+      <div className="px-4 py-4 max-w-2xl mx-auto pb-10 space-y-4">
+        {tab==="workout"&&<div className="space-y-3">
+          <div className="text-violet-300 font-bold">{prog?.name}</div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">{workDays.map(d=>{const done=Object.keys(setLogs2[d.id]||{}).length>0;return<B key={d.id} onClick={()=>setSelDay(d.id)} c={"relative px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border shrink-0 "+(selDay===d.id?"bg-violet-600 border-violet-500 text-white":"bg-slate-800 border-slate-700 text-slate-400")}>{d.label}{done&&<span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full"/>}</B>;})}</div>
+          {day&&day.ex.map((ex,i)=>{
+            const ck=day.id+"-"+i;const cu=(student.custom_program||{})[ck]||{};
+            const name=cu.name||ex.n;const sets=cu.sets||ex.s;
+            const logged=(setLogs2[day.id]?.[name]||[]);const inp=inputs[name]||{w:"",r:""};const saved=savedEx[name];
+            return<div key={i} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2.5 bg-slate-800/90"><div><span className="text-white font-bold text-sm">{name}</span><span className="text-violet-400 text-xs ml-2 bg-violet-900/40 px-1.5 py-0.5 rounded-lg">{sets}</span></div>{logged.length>0&&<span className="text-emerald-400 text-xs font-semibold">{logged.length} set</span>}</div>
+              {logged.length>0&&<div className="px-3 pt-2 pb-1 flex flex-wrap gap-1.5">{logged.map((s,si)=><div key={si} className="flex items-center gap-1 bg-slate-900/70 border border-slate-700/50 rounded-lg px-2 py-1"><span className="text-slate-500 text-xs">S{si+1}:</span><span className="text-white text-xs font-bold">{s.w}kg</span><span className="text-slate-500 text-xs">x</span><span className="text-violet-300 text-xs font-bold">{s.r}</span><B onClick={()=>setSetLogs2(p=>{const d={...p[day.id]};d[name]=d[name].filter((_,j)=>j!==si);return{...p,[day.id]:d};})} c="text-slate-600 hover:text-red-400 text-xs ml-0.5">x</B></div>)}</div>}
+              <div className="flex items-center gap-2 px-3 pb-3 pt-1">
+                <input type="number" placeholder="kg" className="w-20 bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-white text-sm focus:outline-none text-center" value={inp.w} onChange={e=>setInputs(p=>({...p,[name]:{...p[name]||{},w:e.target.value}}))} onKeyDown={e=>e.key==="Enter"&&addSet(day.id,name)}/>
+                <span className="text-slate-600">x</span>
+                <input type="number" placeholder="tekrar" className="w-20 bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-white text-sm focus:outline-none text-center" value={inp.r} onChange={e=>setInputs(p=>({...p,[name]:{...p[name]||{},r:e.target.value}}))} onKeyDown={e=>e.key==="Enter"&&addSet(day.id,name)}/>
+                <B onClick={()=>addSet(day.id,name)} c={"flex-1 font-bold py-2 rounded-xl text-sm "+(saved?"bg-emerald-600 text-white":"bg-violet-600 text-white")}>{saved?"OK":"+ Set"}</B>
+              </div>
+            </div>;
+          })}
+          {student.notes&&<div className="bg-slate-800/40 border border-violet-900/40 rounded-xl px-3 py-2.5 flex gap-2"><span className="text-violet-400 shrink-0">🦅</span><p className="text-slate-300 text-xs">{student.notes}</p></div>}
+        </div>}
+        {tab==="nutrition"&&<div className="space-y-4">
+          <div className="text-violet-300 font-bold">Beslenme Hedefim</div>
+          <div className="bg-gradient-to-br from-violet-900/30 to-indigo-900/30 border border-violet-700/40 rounded-2xl p-4 text-center"><div className="text-slate-400 text-sm">Gunluk Kalori</div><div className="text-5xl font-black text-white mt-1">{student.calories||0}</div><div className="text-slate-500 text-sm">kcal</div></div>
+          <MacroBar p={student.protein||0} c={student.carbs||0} f={student.fat||0}/>
+          <div className="grid grid-cols-3 gap-2">{[["Protein",student.protein||0,(student.protein||0)*4,"bg-violet-500","border-violet-700/40","text-violet-300"],["Karbonhidrat",student.carbs||0,(student.carbs||0)*4,"bg-amber-500","border-amber-700/40","text-amber-300"],["Yag",student.fat||0,(student.fat||0)*9,"bg-pink-500","border-pink-700/40","text-pink-300"]].map(([l,v,kcal,bar,brd,col])=><div key={l} className={"bg-slate-800/60 border rounded-2xl p-3 text-center "+brd}><div className={"w-2 h-2 rounded-full mx-auto mb-1 "+bar}/><div className={"font-black text-xl "+col}>{v}<span className="text-slate-500 text-xs font-normal">g</span></div><div className="text-slate-500 text-xs">{l}</div><div className="text-slate-600 text-xs">{kcal}kcal</div></div>)}</div>
+          <div className="bg-blue-950/40 border border-blue-800/50 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-2xl">💧</span><span className="text-blue-300 font-bold text-sm">Su Takibi</span></div><div><span className="text-blue-200 font-black text-xl">{waterMl}</span><span className="text-blue-400 text-sm">/{wGoal}ml</span></div></div>
+            <div className="h-3 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all" style={{width:wPct+"%"}}/></div>
+            <div className="flex items-center justify-between"><span className={"text-xs font-bold "+(wPct>=100?"text-emerald-400":wPct>=70?"text-blue-400":"text-slate-500")}>{wPct>=100?"Hedef tamamlandi!":wPct+"%"}</span><B onClick={()=>setWaterMl(0)} c="text-slate-600 text-xs">Sifirla</B></div>
+            <div className="flex gap-2 flex-wrap">{[150,200,250,300,500].map(ml=><B key={ml} onClick={()=>setWaterMl(p=>Math.min(p+ml,wGoal*1.5))} c="bg-blue-800/50 border border-blue-700/50 text-blue-200 text-xs font-bold px-3 py-2 rounded-xl">+{ml}ml</B>)}</div>
+            <div className="flex gap-2"><B onClick={()=>setWaterMl(p=>Math.max(0,p-wStep))} c="w-10 h-10 bg-slate-700 text-white font-black text-lg rounded-xl flex items-center justify-center">-</B><select className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-2 text-white text-xs focus:outline-none" value={wStep} onChange={e=>setWStep(parseInt(e.target.value))}>{[100,150,200,250,300,500].map(ml=><option key={ml} value={ml}>{ml}ml</option>)}</select><B onClick={()=>setWaterMl(p=>Math.min(p+wStep,wGoal*1.5))} c="w-10 h-10 bg-blue-600 text-white font-black text-lg rounded-xl flex items-center justify-center">+</B></div>
+          </div>
+          {sups.length>0&&<div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 space-y-3"><div className="text-slate-300 font-bold text-sm">Supplement Programim</div>{sups.map((s,i)=><div key={i} className="flex items-start gap-3 bg-slate-900/40 rounded-xl p-3"><span className="text-2xl shrink-0">💊</span><div><div className="text-white font-semibold text-sm">{s.name}</div><div className="flex flex-wrap gap-x-3 text-xs mt-0.5"><span className="text-slate-400">{s.dose}</span><span className="text-violet-400">{s.timing}</span>{s.note&&<span className="text-slate-500">{s.note}</span>}</div></div></div>)}</div>}
+        </div>}
+        {tab==="measure"&&<div className="space-y-4">
+          <div className="text-violet-300 font-bold">Olculerim</div>
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4 space-y-3">
+            <div className="text-slate-300 text-sm font-semibold">Olcu Gir (cm)</div>
+            <div className="grid grid-cols-4 gap-2">{MKEYS.map(k=><div key={k}><div className="text-slate-400 text-xs mb-1">{MLBL[k]}</div><input type="number" placeholder="cm" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-white text-sm focus:outline-none text-center" value={entry[k]} onChange={e=>setEntry(p=>({...p,[k]:e.target.value}))}/></div>)}</div>
+            <B onClick={saveMeasurement} c="w-full bg-violet-600 text-white font-bold py-2.5 rounded-xl text-sm">Kaydet</B>
+            {mSaved&&<div className="text-emerald-400 text-xs text-center font-semibold">Kaydedildi!</div>}
+          </div>
+          {lat&&<div className="space-y-2"><div className="text-slate-400 text-xs font-semibold">Son Olcum — {fmtDate(lat.date)}</div><div className="grid grid-cols-4 gap-2">{MKEYS.map(k=>{const d=prv?(lat[k]-prv[k]).toFixed(1):null;const fat=["bel","kalca","boyun"];const good=d!==null?(fat.includes(k)?parseFloat(d)<0:parseFloat(d)>0):null;return<div key={k} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-2.5 text-center"><div className="text-slate-400 text-xs">{MLBL[k]}</div><div className="text-white font-black text-base">{lat[k]||"—"}</div>{d!==null&&<div className={"text-xs font-bold "+(good?"text-emerald-400":good===false?"text-red-400":"text-amber-400")}>{parseFloat(d)>0?"+":""}{d}</div>}</div>;})}</div></div>}
+          {ms.length===0&&<div className="text-slate-500 text-sm text-center py-6">Henuz olcu girilmemis.</div>}
+        </div>}
+        {tab==="profile"&&<div className="space-y-4">
+          <div className="text-violet-300 font-bold">Profilim</div>
+          <div className="bg-gradient-to-br from-violet-900/30 to-indigo-900/30 border border-violet-700/40 rounded-2xl p-4">
+            <div className="flex items-center gap-3 mb-3"><div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl">{student.name[0]}</div><div><div className="text-white font-black text-base">{student.name}</div><div className="text-violet-300 text-sm">{student.goal}</div></div></div>
+            <div className="grid grid-cols-3 gap-2 text-center">{[["Yas",student.age?student.age+"y":"—"],["Boy",student.height?student.height+"cm":"—"],["Kilo",student.weight?student.weight+"kg":"—"],["Boyun",student.neck?student.neck+"cm":"—"],["Bel",student.waist?student.waist+"cm":"—"],["BMI",(student.weight&&student.height)?(student.weight/((student.height/100)**2)).toFixed(1):"—"]].map(([l,v])=><div key={l} className="bg-slate-900/50 rounded-xl py-2"><div className="text-slate-500 text-xs">{l}</div><div className="text-white font-bold text-sm">{v}</div></div>)}</div>
+          </div>
+          {student.notes&&<div className="bg-slate-800/60 border border-violet-900/40 rounded-2xl p-4"><div className="text-violet-300 font-bold text-sm mb-2">🦅 Kocunun Notu</div><p className="text-slate-300 text-sm">{student.notes}</p></div>}
+          {(student.flags||[]).length>0&&<div className="bg-red-950/40 border border-red-800/50 rounded-2xl p-3"><div className="text-red-300 text-xs font-semibold mb-2">Uyarilar</div><div className="flex gap-1.5 flex-wrap">{(student.flags||[]).map((fl,i)=><span key={i} className="text-xs bg-red-900/60 border border-red-700/50 text-red-300 px-2 py-0.5 rounded-full">{fl}</span>)}</div></div>}
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 bg-slate-800/80 border-b border-slate-700/50"><span className="text-emerald-400 font-bold text-sm">✉️ Kocuma Not Yaz</span></div>
+            <div className="p-4 space-y-2">
+              <textarea rows={4} maxLength={300} placeholder="Antrenman, hissettiklerin, sorularin..." className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none resize-none" value={sNote} onChange={e=>setSNote(e.target.value.slice(0,300))}/>
+              <div className="flex items-center justify-between"><span className={"text-xs "+(sNote.length>=300?"text-red-400":sNote.length>250?"text-amber-400":"text-slate-600")}>{sNote.length}/300</span><B onClick={saveNote} disabled={!sNote.trim()} c="bg-violet-600 disabled:opacity-40 text-white text-xs font-bold px-4 py-2 rounded-xl">Gonder</B></div>
+              {noteSaved&&<div className="text-emerald-400 text-xs text-center font-semibold">Iletildi!</div>}
+            </div>
+          </div>
+          <div className="bg-slate-800/40 border border-slate-700/40 rounded-2xl p-3">
+            <B onClick={()=>setShowPass(!showPass)} c="text-slate-400 text-sm font-semibold w-full flex items-center justify-between">Sifremi Degistir <span>{showPass?"▲":"▼"}</span></B>
+            {showPass&&<div className="mt-3 space-y-2">
+              <input type="password" placeholder="Yeni sifre" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={np} onChange={e=>setNp(e.target.value)}/>
+              <input type="password" placeholder="Tekrar" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none" value={np2} onChange={e=>setNp2(e.target.value)}/>
+              {pm&&<div className={"text-xs px-2 py-1 rounded-lg "+(pm==="Guncellendi!"?"text-emerald-400":"text-red-400")}>{pm}</div>}
+              <B onClick={changePass} c="w-full bg-violet-600 text-white font-bold py-2 rounded-xl text-sm">Guncelle</B>
+            </div>}
+          </div>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+// APP
+function App(){
+  const [session,setSession]=useState(null);
+  if(!session)return<Login onCoach={()=>setSession({role:"coach"})} onStudent={id=>setSession({role:"student",id})}/>;
+  if(session.role==="coach")return<CoachPanel onLogout={()=>setSession(null)}/>;
+  return<StudentPanel studentId={session.id} onLogout={()=>setSession(null)}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
